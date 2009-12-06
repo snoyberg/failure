@@ -60,3 +60,5 @@ instance Failure e []    where failure _ = []
 
 instance Exception e => Failure e IO where
   failure = Control.Exception.throw
+
+instance Failure e (Either e) where failure = Left
