@@ -33,8 +33,8 @@ class (Functor f, Failure e f) => FunctorFailure e f
 class (Applicative f, Failure e f) => ApplicativeFailure e f
 class (Monad f, Applicative f, Failure e f) => MonadFailure e f
 
--- These introduce the need to use undecidables and overlapping.
--- However, since they are merely type synonyms, this is acceptable.
+-- These introduce the need to use undecidables.
+-- However, since they are merely type class synonyms, this is acceptable.
 instance (Functor f, Failure e f) => FunctorFailure e f
 instance (Applicative f, Failure e f) => ApplicativeFailure e f
 instance (Monad f, Applicative f, Failure e f) => MonadFailure e f
