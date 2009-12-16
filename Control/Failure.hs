@@ -79,6 +79,8 @@ instance Failure e (Either e) where failure = Left
 
 data NothingException = NothingException
   deriving (Show, Typeable)
+instance Exception NothingException
+
 instance Try Maybe where
   type Error Maybe = NothingException
   try Nothing      = failure NothingException
@@ -91,6 +93,8 @@ instance Try (Either e) where
 
 data NullException = NullException
   deriving (Show, Typeable)
+instance Exception NullException
+
 instance Try [] where
   type Error [] = NullException
   try []        = failure NullException
