@@ -1,5 +1,5 @@
 name: failure
-version: 0.0.0
+version: 0.2.0
 Cabal-Version:  >= 1.6
 build-type: Simple
 license: PublicDomain

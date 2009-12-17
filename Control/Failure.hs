@@ -30,6 +30,7 @@ import Control.Applicative (Applicative, pure)
 
 class Failure e f where
     failure :: e -> f v
+    success :: v -> f v
 class (Functor f, Failure e f) => FunctorFailure e f
 class (Applicative f, Failure e f) => ApplicativeFailure e f
 class (Monad f, Applicative f, Failure e f) => MonadFailure e f
@@ -69,13 +70,20 @@ instance Exception StringException
 -- base instances
 -- --------------
 
-instance Failure e Maybe where failure _ = Nothing
-instance Failure e []    where failure _ = []
+instance Failure e Maybe where
+  failure _ = Nothing
+  success = Just
+instance Failure e [] where
+  failure _ = []
+  success x = [x]
 
 instance Exception e => Failure e IO where
   failure = Control.Exception.throw
+  success = return
 
-instance Failure e (Either e) where failure = Left
+instance Failure e (Either e) where
+  failure = Left
+  success = Right
 
 data NothingException = NothingException
   deriving (Show, Typeable)
