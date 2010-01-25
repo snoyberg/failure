@@ -26,7 +26,8 @@ module Control.Failure
 import Prelude hiding (catch)
 import Control.Exception (throw, catch, Exception, SomeException (..))
 import Data.Typeable (Typeable)
-import Control.Applicative (Applicative, pure)
+import Control.Applicative (Applicative (..))
+import Control.Monad (liftM, ap)
 
 class Failure e f where
     failure :: e -> f v
@@ -39,6 +40,23 @@ class (Monad f, Applicative f, Failure e f) => MonadFailure e f
 instance (Functor f, Failure e f) => FunctorFailure e f
 instance (Applicative f, Failure e f) => ApplicativeFailure e f
 instance (Monad f, Applicative f, Failure e f) => MonadFailure e f
+
+-- In order to avoid type signature pollution, we provide a single concrete
+-- instance of the above typeclass synonyms.
+newtype DummyMonad a = DummyMonad a
+instance Functor DummyMonad where
+    fmap = liftM
+instance Applicative DummyMonad where
+    pure = return
+    (<*>) = ap
+instance Monad DummyMonad where
+    return = DummyMonad
+    (DummyMonad a) >>= f = f a
+instance Failure e DummyMonad where
+    failure _ = error "DummyMonad should never actually be used"
+instance FunctorFailure e DummyMonad
+instance ApplicativeFailure e DummyMonad
+instance MonadFailure e DummyMonad
 
 class Failure e f => WrapFailure e f where
     -- | Wrap the failure value, if any, with the given function. This is
