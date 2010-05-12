@@ -7,11 +7,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 -- | Type classes for returning failures.
 module Control.Failure
-    ( -- * Type classes
+    ( -- * Type class
       Failure (..)
-    , FunctorFailure
-    , ApplicativeFailure
-    , MonadFailure
       -- * Wrapping failures
     , WrapFailure (..)
       -- * Convenience 'String' failure
@@ -27,36 +24,9 @@ import Prelude hiding (catch)
 import Control.Exception (throw, catch, Exception, SomeException (..))
 import Data.Typeable (Typeable)
 import Control.Applicative (Applicative (..))
-import Control.Monad (liftM, ap)
 
-class Failure e f where
+class (Monad f, Applicative f) => Failure e f where
     failure :: e -> f v
-class (Functor f, Failure e f) => FunctorFailure e f
-class (Applicative f, Failure e f) => ApplicativeFailure e f
-class (Monad f, Applicative f, Failure e f) => MonadFailure e f
-
--- These introduce the need to use undecidables.
--- However, since they are merely type class synonyms, this is acceptable.
-instance (Functor f, Failure e f) => FunctorFailure e f
-instance (Applicative f, Failure e f) => ApplicativeFailure e f
-instance (Monad f, Applicative f, Failure e f) => MonadFailure e f
-
--- In order to avoid type signature pollution, we provide a single concrete
--- instance of the above typeclass synonyms.
-newtype DummyMonad a = DummyMonad a
-instance Functor DummyMonad where
-    fmap = liftM
-instance Applicative DummyMonad where
-    pure = return
-    (<*>) = ap
-instance Monad DummyMonad where
-    return = DummyMonad
-    (DummyMonad a) >>= f = f a
-instance Failure e DummyMonad where
-    failure _ = error "DummyMonad should never actually be used"
-instance FunctorFailure e DummyMonad
-instance ApplicativeFailure e DummyMonad
-instance MonadFailure e DummyMonad
 
 class Failure e f => WrapFailure e f where
     -- | Wrap the failure value, if any, with the given function. This is
@@ -71,7 +41,7 @@ instance Exception e => WrapFailure e IO where
 class Try f where
   type Error f
   -- Turn a concrete failure into an abstract failure
-  try :: ApplicativeFailure (Error f) f' => f a -> f' a
+  try :: Failure (Error f) f' => f a -> f' a
 
 -- | Call 'failure' with a 'String'.
 failureString :: Failure StringException m => String -> m a
@@ -93,7 +63,7 @@ instance Failure e []    where failure _ = []
 instance Exception e => Failure e IO where
   failure = Control.Exception.throw
 
-instance Failure e (Either e) where failure = Left
+-- not a monad or applicative instance Failure e (Either e) where failure = Left
 
 data NothingException = NothingException
   deriving (Show, Typeable)
