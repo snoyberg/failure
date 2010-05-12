@@ -23,9 +23,8 @@ module Control.Failure
 import Prelude hiding (catch)
 import Control.Exception (throw, catch, Exception, SomeException (..))
 import Data.Typeable (Typeable)
-import Control.Applicative (Applicative (..))
 
-class (Monad f, Applicative f) => Failure e f where
+class Monad f => Failure e f where
     failure :: e -> f v
 
 class Failure e f => WrapFailure e f where
@@ -72,12 +71,12 @@ instance Exception NothingException
 instance Try Maybe where
   type Error Maybe = NothingException
   try Nothing      = failure NothingException
-  try (Just x)     = pure x
+  try (Just x)     = return x
 
 instance Try (Either e) where
   type Error (Either e) = e
   try (Left  e)         = failure e
-  try (Right x)         = pure x
+  try (Right x)         = return x
 
 data NullException = NullException
   deriving (Show, Typeable)
@@ -86,4 +85,4 @@ instance Exception NullException
 instance Try [] where
   type Error [] = NullException
   try []        = failure NullException
-  try (x:_)     = pure x
+  try (x:_)     = return x
