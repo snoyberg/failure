@@ -5,7 +5,7 @@ build-type: Simple
 license: PublicDomain
 author: Pepe Iborra, Michael Snoyman, Nicolas Pouillard
 maintainer: pepeiborra@gmail.com
-homepage: http://github.com/snoyberg/failure
+homepage: http://www.haskell.org/haskellwiki/Failure
 description: A simple type class for success/failure computations.
 synopsis: A simple type class for success/failure computations.
 category: Control, Monads, Failure
