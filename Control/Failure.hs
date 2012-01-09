@@ -5,6 +5,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE CPP #-}
 -- | Type classes for returning failures.
 module Control.Failure
     ( -- * Type class
@@ -23,6 +24,11 @@ module Control.Failure
 import Prelude hiding (catch)
 import Control.Exception (throw, catch, Exception, SomeException (..))
 import Data.Typeable (Typeable)
+#if !(MIN_VERSION_base(4,3,0))
+import Control.Monad.Trans.Error ()
+#else
+import Control.Monad.Instances ()
+#endif
 
 class Monad f => Failure e f where
     failure :: e -> f v
@@ -58,6 +64,7 @@ instance Exception StringException
 
 instance Failure e Maybe where failure _ = Nothing
 instance Failure e []    where failure _ = []
+instance Failure e (Either e) where failure = Left
 
 instance Exception e => Failure e IO where
   failure = Control.Exception.throw
