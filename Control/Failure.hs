@@ -5,6 +5,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE CPP #-}
 -- | Type classes for returning failures.
 module Control.Failure
     ( -- * Type class
@@ -21,10 +22,13 @@ module Control.Failure
     ) where
 
 import Prelude hiding (catch)
-import Control.Exception (throwIO, catch, Exception, SomeException (..))
+import Control.Exception (throw, catch, Exception, SomeException (..))
 import Data.Typeable (Typeable)
+#if !(MIN_VERSION_base(4,3,0))
 import Control.Monad.Trans.Error ()
-import Control.Monad.Trans.Class (MonadTrans (lift))
+#else
+import Control.Monad.Instances ()
+#endif
 
 class Monad f => Failure e f where
     failure :: e -> f v
@@ -37,7 +41,7 @@ class Failure e f => WrapFailure e f where
     wrapFailure :: (forall eIn. Exception eIn => eIn -> e) -> f a -> f a
 instance Exception e => WrapFailure e IO where
     wrapFailure f m =
-        m `catch` \e@SomeException{} -> throwIO (f e)
+        m `catch` \e@SomeException{} -> throw (f e)
 
 class Try f where
   type Error f
@@ -63,12 +67,7 @@ instance Failure e []    where failure _ = []
 instance Failure e (Either e) where failure = Left
 
 instance Exception e => Failure e IO where
-  failure = throwIO
-
--- | Instance for all monad transformers, simply lift the @failure@ into the
--- base monad.
-instance (MonadTrans t, Failure e m, Monad (t m)) => Failure e (t m) where
-    failure = lift . failure
+  failure = Control.Exception.throw
 
 -- not a monad or applicative instance Failure e (Either e) where failure = Left
 

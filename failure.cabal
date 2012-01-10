@@ -11,10 +11,15 @@ synopsis: A simple type class for success/failure computations.
 category: Control, Monads, Failure
 stability: stable
 
+flag base43
+
 Library
   buildable: True
-  build-depends: base         >= 4   && < 5
-               , transformers >= 0.2 && < 0.3
+  if flag(base43)
+    build-depends: base >= 4.3 && < 5
+  else
+    build-depends: base >= 4 && < 4.3
+                 , transformers >= 0.2 && < 0.3
   ghc-options: -Wall
 
   exposed-modules:
