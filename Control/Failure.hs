@@ -61,6 +61,8 @@ instance Exception StringException
 instance Failure e Maybe where failure _ = Nothing
 instance Failure e []    where failure _ = []
 instance Failure e (Either e) where failure = Left
+instance (Exception e)=> Failure e (Either SomeException)
+    where failure = Left . toException
 
 instance Exception e => Failure e IO where
   failure = throwIO
