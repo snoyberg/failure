@@ -1,14 +1,16 @@
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
 -- | Type classes for returning failures.
+--
+-- Note: This module used to contain a lot more functionality, but I believe it
+-- was unused functionality. If you want any of it back, just email me.
 module Control.Failure
     ( -- * Type class
       Failure (..)
+      -- * General exceptions
+    , exception
+      {-
       -- * Wrapping failures
     , WrapFailure (..)
       -- * Convenience 'String' failure
@@ -18,17 +20,21 @@ module Control.Failure
     , Try (..)
     , NothingException (..)
     , NullException (..)
+      -}
     ) where
 
-import Prelude hiding (catch)
-import Control.Exception (throwIO, catch, Exception, SomeException (..))
-import Data.Typeable (Typeable)
+import Control.Exception (throwIO, Exception (toException), SomeException (..))
 import Control.Monad.Trans.Error ()
 import Control.Monad.Trans.Class (MonadTrans (lift))
 
 class Monad f => Failure e f where
     failure :: e -> f v
 
+-- | Convert to a 'SomeException' via 'toException' before calling 'failure'.
+exception :: (Exception e, Failure SomeException m) => e -> m a
+exception = failure . toException
+
+{-
 class Failure e f => WrapFailure e f where
     -- | Wrap the failure value, if any, with the given function. This is
     -- useful in particular when you want all the exceptions returned from a
@@ -53,6 +59,7 @@ newtype StringException = StringException String
 instance Show StringException where
     show (StringException s) = "StringException: " ++ s
 instance Exception StringException
+-}
 
 -- --------------
 -- base instances
@@ -70,6 +77,7 @@ instance Exception e => Failure e IO where
 instance (MonadTrans t, Failure e m, Monad (t m)) => Failure e (t m) where
     failure = lift . failure
 
+{-
 -- not a monad or applicative instance Failure e (Either e) where failure = Left
 
 data NothingException = NothingException
@@ -94,3 +102,4 @@ instance Try [] where
   type Error [] = NullException
   try []        = failure NullException
   try (x:_)     = return x
+-}
